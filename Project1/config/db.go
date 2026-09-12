@@ -1,0 +1,29 @@
+package config
+
+import (
+	"exchangeapp/global"
+	"log"
+	"time"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+)
+
+func initDB() {
+	dsn := AppConfig.Datebase.Dsn
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("fail to inital database, got error: %v", err)
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("fail to configure database, got error: %v", err)
+	}
+	// SetMaxIdleConns 用于设置连接池中空闲连接的最大数量。
+	sqlDB.SetMaxIdleConns(AppConfig.Datebase.MaxIdleConns)
+	// SetMaxOpenConns 设置打开数据库连接的最大数量。
+	sqlDB.SetMaxOpenConns(AppConfig.Datebase.MaxOpenConns)
+	// SetConnMaxLifetime 设置了连接可复用的最大时间。
+	sqlDB.SetConnMaxLifetime(time.Hour)
+	global.Db = db
+}
