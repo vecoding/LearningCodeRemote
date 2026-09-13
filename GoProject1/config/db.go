@@ -10,7 +10,7 @@ import (
 )
 
 func initDB() {
-	dsn := AppConfig.Datebase.Dsn
+	dsn := AppConfig.Database.Dsn
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("fail to inital database, got error: %v", err)
@@ -20,10 +20,11 @@ func initDB() {
 		log.Fatalf("fail to configure database, got error: %v", err)
 	}
 	// SetMaxIdleConns 用于设置连接池中空闲连接的最大数量。
-	sqlDB.SetMaxIdleConns(AppConfig.Datebase.MaxIdleConns)
+	sqlDB.SetMaxIdleConns(AppConfig.Database.MaxIdleConns)
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(AppConfig.Datebase.MaxOpenConns)
+	sqlDB.SetMaxOpenConns(AppConfig.Database.MaxOpenConns)
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(time.Hour)
 	global.Db = db
+
 }

@@ -11,7 +11,7 @@ type Config struct {
 		Name string
 		Port string
 	}
-	Datebase struct {
+	Database struct {
 		Dsn          string
 		MaxIdleConns int
 		MaxOpenConns int

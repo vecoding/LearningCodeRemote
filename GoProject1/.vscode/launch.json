@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🔍 调试模式（F5）",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "▶️ 直接运行（不调试 Ctrl+F5）",
+            "type": "go",
+            "request": "launch",
+            "mode": "exec",
+            "program": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        }
+    ]
+}
