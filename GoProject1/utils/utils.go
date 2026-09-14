@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -18,7 +17,7 @@ func GenerateJWT(userName string) (string, error) {
 		"username": userName,
 		"exp":      time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
-	signedToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	signedToken, err := token.SignedString([]byte("secret"))
 	return "Bearer " + signedToken, err
 }
 func CheckPassword(password string, hash string) bool {
@@ -33,7 +32,7 @@ func ParseJWT(tokenString string) (string, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("Unexpected signing method")
 		}
-		return []byte("sercret"), nil
+		return []byte("secret"), nil
 	})
 	if err != nil {
 		return "", err

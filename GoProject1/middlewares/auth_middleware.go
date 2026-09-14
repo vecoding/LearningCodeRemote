@@ -20,7 +20,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		username, err := utils.ParseJWT(token)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": err,
+				"error": err.Error(),
 			})
 			c.Abort()
 			return
