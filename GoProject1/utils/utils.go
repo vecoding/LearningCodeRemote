@@ -12,6 +12,10 @@ func HashPassword(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(hash), err
 }
+func CheckPassword(password string, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
 func GenerateJWT(userName string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": userName,
@@ -19,10 +23,6 @@ func GenerateJWT(userName string) (string, error) {
 	})
 	signedToken, err := token.SignedString([]byte("secret"))
 	return "Bearer " + signedToken, err
-}
-func CheckPassword(password string, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
 }
 func ParseJWT(tokenString string) (string, error) {
 	if len(tokenString) > 7 && tokenString[:7] == "Bearer " {
