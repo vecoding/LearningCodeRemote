@@ -17,5 +17,5 @@ func initRedis() {
 	if err != nil {
 		log.Fatalf("Failed to connect into struct, got error: %v", err)
 	}
-	global.Redis = redisClient
+	global.RedisDB = redisClient
 }

@@ -11,7 +11,7 @@ import (
 func LikeArticle(c *gin.Context) {
 	articleID := c.Param("id")
 	likeKey := "article:" + articleID + ":like"
-	if err := global.Redis.Incr(likeKey).Err(); err != nil {
+	if err := global.RedisDB.Incr(likeKey).Err(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to like article"})
 		return
 	}
@@ -20,7 +20,7 @@ func LikeArticle(c *gin.Context) {
 func GetArticleLikes(c *gin.Context) {
 	articleID := c.Param("id")
 	likeKey := "article:" + articleID + ":like"
-	likes, err := global.Redis.Get(likeKey).Result()
+	likes, err := global.RedisDB.Get(likeKey).Result()
 	if err == redis.Nil {
 		likes = "0"
 	} else if err != nil {
