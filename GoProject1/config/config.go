@@ -16,6 +16,11 @@ type Config struct {
 		MaxIdleConns int
 		MaxOpenConns int
 	}
+	Redis struct {
+		Addr     string
+		Password string
+		DB       int
+	}
 }
 
 var AppConfig *Config
@@ -33,4 +38,5 @@ func InitConfig() {
 		log.Fatalf("Unable to decode into struct :%v", err)
 	}
 	initDB()
+	initRedis()
 }
