@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { Star, StarFilled } from '@element-plus/icons-vue'
 import { getArticle, likeArticle, getArticleLikes } from '@/api/articles'
+import { pushLikeMessage } from '@/api/request'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
 
@@ -12,8 +13,13 @@ const auth = useAuthStore()
 
 const article = ref(null)
 const likes = ref(0)
+const liked = ref(false)
 const loading = ref(false)
 const liking = ref(false)
+
+// 点赞 / 取消点赞之间的最短间隔，避免短时间内反复切换
+const LIKE_COOLDOWN_MS = 1000
+const lastLikeTime = ref(0)
 
 async function load() {
   const id = route.params.id
@@ -36,27 +42,46 @@ async function refreshLikes() {
   try {
     const data = await getArticleLikes(id)
     likes.value = Number(data?.likes || 0)
+    liked.value = Boolean(data?.isLike)
   } catch {
     likes.value = 0
+    liked.value = false
   }
 }
 
 async function handleLike() {
   if (!auth.isLoggedIn) {
-    ElMessage.warning('请先登录')
+    pushLikeMessage({ message: '请先登录', type: 'warning' })
     router.push({ path: '/login', query: { redirect: route.fullPath } })
     return
   }
+  // 冷却期检查：点赞与取消点赞之间不允许立刻反向操作
+  const now = Date.now()
+  if (now - lastLikeTime.value < LIKE_COOLDOWN_MS) {
+    pushLikeMessage({ message: '操作太频繁，请稍后再试', type: 'warning' })
+    return
+  }
+  if (liking.value) return
   const id = route.params.id
   liking.value = true
   try {
-    await likeArticle(id)
-    await refreshLikes()
-    ElMessage.success('点赞成功')
+    // 后端为 toggle 行为：未点赞 → 点赞；已点赞 → 取消
+    const data = await likeArticle(id)
+    const message = data?.message || ''
+    if (message.includes('unliked')) {
+      liked.value = false
+      likes.value = Math.max(0, (likes.value || 0) - 1)
+      pushLikeMessage({ message: '已取消点赞', type: 'success' })
+    } else {
+      liked.value = true
+      likes.value = (likes.value || 0) + 1
+      pushLikeMessage({ message: '点赞成功', type: 'success' })
+    }
   } catch {
-    /* 拦截器已处理 */
+    /* 点赞失败的错误已在拦截器中通过 pushLikeMessage 显示 */
   } finally {
     liking.value = false
+    lastLikeTime.value = Date.now()
   }
 }
 
@@ -88,14 +113,18 @@ watch(() => route.params.id, load)
 
       <div class="like-bar">
         <el-button
-          type="primary"
+          :type="liked ? 'warning' : 'primary'"
           size="large"
           :loading="liking"
+          :disabled="liking"
+          round
           @click="handleLike"
-          :style="{ background: 'var(--brand-grad)', border: 'none' }"
+          :class="['like-btn', { 'is-liked': liked }]"
         >
-          <el-icon><Star /></el-icon>
-          <span>点赞</span>
+          <el-icon class="like-btn-icon">
+            <component :is="liked ? StarFilled : Star" />
+          </el-icon>
+          <span>{{ liked ? '已点赞' : '点赞' }}</span>
         </el-button>
         <div class="like-count">
           <el-icon><StarFilled /></el-icon>
@@ -171,6 +200,26 @@ watch(() => route.params.id, load)
   padding: 18px 0;
   border-top: 1px dashed #ebeef5;
   border-bottom: 1px dashed #ebeef5;
+}
+.like-btn {
+  background: var(--brand-grad);
+  border: none;
+  min-width: 140px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.like-btn:hover:not(.is-disabled):not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.28);
+}
+.like-btn.is-liked {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+.like-btn.is-liked:hover:not(.is-disabled):not(:disabled) {
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+}
+.like-btn-icon {
+  margin-right: 4px;
 }
 .like-count {
   display: inline-flex;
